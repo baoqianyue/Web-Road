@@ -27,7 +27,7 @@ public class DispatcherServlet implements Servlet {
         for (MappingHandler handler : HandlerManager.mappingHandlerList) {
             try {
                 if (handler.handle(req, res)) {
-                    // TODO: 2019-06-08
+                    return;
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();

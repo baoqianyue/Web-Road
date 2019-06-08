@@ -1,5 +1,7 @@
 package com.barackbao.web.handler;
 
+import com.barackbao.beans.BeanFactory;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +33,7 @@ public class MappingHandler {
 
     /**
      * 处理网络请求,获取请求参数
-     *
+     * <p>
      * 动态创建处理对应请求url的Controller实例
      * 使用反射调用Controller方法
      * 将处理结果写入到ServletResponse中
@@ -55,8 +57,8 @@ public class MappingHandler {
             parameters[i] = req.getParameter(args[i]);
         }
 
-        // 动态实例化controller
-        Object ctl = controller.newInstance();
+        // 从bean工厂中获取controller对象
+        Object ctl = BeanFactory.getBean(controller);
         Object response = method.invoke(ctl, parameters);
 
         // 将结果放入Servlet的response

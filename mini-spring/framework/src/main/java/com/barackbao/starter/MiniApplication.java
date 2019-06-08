@@ -1,5 +1,6 @@
 package com.barackbao.starter;
 
+import com.barackbao.beans.BeanFactory;
 import com.barackbao.core.ClassScanner;
 import com.barackbao.web.handler.HandlerManager;
 import com.barackbao.web.server.TomcatServer;
@@ -31,10 +32,13 @@ public class MiniApplication {
             List<Class<?>> classList = ClassScanner.scanClasses(cls.getPackage().getName());
             classList.forEach(it -> System.out.println(it.getName()));
 
+            // 初始化bean，保存到bean工厂中
+            BeanFactory.initBean(classList);
+
             // 初始化所有的Mappinghandler
             HandlerManager.resolveMappingHandler(classList);
 
-        } catch (LifecycleException | IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
