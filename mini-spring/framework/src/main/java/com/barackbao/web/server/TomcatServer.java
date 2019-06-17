@@ -6,6 +6,9 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 
+import javax.servlet.ServletException;
+import java.io.File;
+
 /**
  * Created by barackbao on 2019-06-07
  */
@@ -19,7 +22,7 @@ public class TomcatServer {
     }
 
 
-    public void startServer() throws LifecycleException {
+    public void startServer() throws LifecycleException, ServletException {
         tomcat = new Tomcat();
         tomcat.setPort(6699);
         tomcat.start();
@@ -28,7 +31,7 @@ public class TomcatServer {
         // 标准实现
         Context context = new StandardContext();
         // 设置路径为空
-        context.setPath("");
+        context.setPath("/justdo");
         // 设置默认的生命周期监听器
         context.addLifecycleListener(new Tomcat.FixContextListener());
 
@@ -39,6 +42,9 @@ public class TomcatServer {
         context.addServletMappingDecoded("/", "dispatcherServlet");
         // context容器需要添加到一个host容器中才能运行
         tomcat.getHost().addChild(context);
+
+        System.out.println("userdir: " + System.getProperty("user.dir"));
+        tomcat.addWebapp("", System.getProperty("user.dir") + File.separator + "test/webapp/");
 
 
         // 为了防止服务器中途退出，添加一个常驻线程
@@ -54,5 +60,6 @@ public class TomcatServer {
         awaitThread.setDaemon(false);
         // 将线程启动，让tomcat一直在等待
         awaitThread.start();
+
     }
 }

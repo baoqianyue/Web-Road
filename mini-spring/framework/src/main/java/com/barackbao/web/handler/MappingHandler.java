@@ -1,10 +1,15 @@
 package com.barackbao.web.handler;
 
 import com.barackbao.beans.BeanFactory;
+import com.barackbao.context.WebContext;
+import com.barackbao.utils.DispatchActionConstants;
+import com.barackbao.web.view.View;
 
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,9 +48,21 @@ public class MappingHandler {
      * @return 返回处理结果
      */
     public boolean handle(ServletRequest req, ServletResponse res) throws IllegalAccessException,
-            InstantiationException, InvocationTargetException, IOException {
+            InstantiationException, InvocationTargetException, IOException, ServletException {
+
+        // 将当前Request和Response保存在ThreadLocal中，便于在Controller中使用
+        WebContext.requestHolder.set((HttpServletRequest) req);
+        WebContext.responseHolder.set((HttpServletResponse) res);
+
+
         // 获取请求url
         String requestUri = ((HttpServletRequest) req).getRequestURI();
+//        String requestUri = parseRequestUri((HttpServletRequest) req);
+        System.out.println("请求url: " + requestUri);
+        System.out.println("保存的url: " + uri);
+
+        System.out.println("servletContext: "
+                + " " + ((HttpServletRequest) req).getServletPath());
 
         if (!uri.equals(requestUri)) {
             return false;
@@ -61,9 +78,29 @@ public class MappingHandler {
         Object ctl = BeanFactory.getBean(controller);
         Object response = method.invoke(ctl, parameters);
 
-        // 将结果放入Servlet的response
-        res.getWriter().println(response);
+        System.out.println(response.toString());
+
+
+        View view = (View) response;
+        // 判断跳转方式
+        if (view.getDispatchType().equals(DispatchActionConstants.FORWARD)) {
+            req.getRequestDispatcher(view.getUrl()).forward(req, res);
+        } else if (view.getDispatchType().equals(DispatchActionConstants.REDIRECT)) {
+            ((HttpServletResponse) res).sendRedirect(((HttpServletRequest) req).getContextPath() + view.getUrl());
+        } else {
+            req.getRequestDispatcher(view.getUrl()).forward(req, res);
+        }
 
         return true;
+    }
+
+
+    private String parseRequestUri(HttpServletRequest request) {
+        String path = request.getContextPath() + "/";
+        String requestUri = request.getRequestURI();
+        String midUrl = requestUri.replace(path, "");
+        String lastUrl = midUrl.substring(0, midUrl.lastIndexOf("."));
+
+        return lastUrl;
     }
 }
